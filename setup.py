@@ -2,9 +2,9 @@ from setuptools import setup, find_packages
 setup(
     name="Fast-Parapred",
     version="1.0",
-    packages= ["aid25"],
+    packages= ["paratope"],
     entry_points={
-        "console_scripts": ['fast_parapred = aid25.library_commands:main']
+        "console_scripts": ['fast_parapred = paratope.library_commands:main']
     },
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
@@ -22,7 +22,7 @@ setup(
     package_data={
         # If any package contains *.txt or *.rst files, include them:
         '': ['*.csv'],
-        "aid25": ["data/*.csv", "cv-ab-seq/ag_weights.pth.tar","cv-ab-seq/rnn_weights.pth.tar",
+        "paratope": ["data/*.csv", "cv-ab-seq/ag_weights.pth.tar","cv-ab-seq/rnn_weights.pth.tar",
                   "cv-ab-seq/parapred_weights.pth.tar", "cv-ab-seq/atrous_self_weights.pth.tar" ]
     },
 
