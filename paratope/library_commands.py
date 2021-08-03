@@ -35,12 +35,12 @@ from docopt import docopt
 from torch.autograd import Variable
 import torch.nn as nn
 
-from .constants import *
-from .parsing import get_pdb_structure
-from .preprocessing import process_chains_without_labels, seq_to_one_hot_without_chain, seq_to_one_hot, find_chain
-from .evaluation_tools import sort_batch_without_labels
-from .search import NeighbourSearch
-from .visualisation import print_probabilities, print_ag_weights
+from constants import *
+from parsing import get_pdb_structure
+from preprocessing import process_chains_without_labels, seq_to_one_hot_without_chain, seq_to_one_hot, find_chain
+from evaluation_tools import sort_batch_without_labels
+from search import NeighbourSearch
+from visualisation import print_probabilities, print_ag_weights
 
 _model = None
 
@@ -51,10 +51,10 @@ def get_predictor(id_model="FP"):
     :return: instance of model
     """
     global _model
-    from .atrous_self import AtrousSelf
-    from .model import AbSeqModel
-    from .rnn_model import RNNModel
-    from .ag_experiment import AG
+    from atrous_self import AtrousSelf
+    from model import AbSeqModel
+    from rnn_model import RNNModel
+    from ag_experiment import AG
     if _model is None:
         if id_model == "L":
             _model = RNNModel()
