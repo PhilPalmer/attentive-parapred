@@ -32,7 +32,7 @@ conda activate parapred_test
 python setup.py install
 ```
 
-Fix: Changed package name (see 1ccecc618e4cd8fb7fb409a57b3efeb75ffddcf8)
+Fix: Changed package name (see [1ccecc6](https://github.com/PhilPalmer/attentive-parapred/commit/1ccecc618e4cd8fb7fb409a57b3efeb75ffddcf8))
 
 </details>
 
@@ -124,7 +124,7 @@ File "library_commands.py", line 38, in <module>
 ImportError: attempted relative import with no known parent package
 ```
 
-Fix: Removed the `.` before the imported filenames in `library_commands.py` (see 38c97b9da1ea25a05c6d4ad6ad5205f7148bb14f)
+Fix: Removed the `.` before the imported filenames in `library_commands.py` (see [38c97b9](https://github.com/PhilPalmer/attentive-parapred/commit/38c97b9da1ea25a05c6d4ad6ad5205f7148bb14f))
 
 </details>
 
