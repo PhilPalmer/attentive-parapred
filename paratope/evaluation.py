@@ -83,7 +83,7 @@ def kfold_cv_eval(dataset, output_file="crossval-data.p",
         ag_masks_test = index_select(ag_masks, 0, test_idx)
         dist_mat_test = index_select(dist_mat, 0, test_idx)
 
-        code = 7
+        code = 5
         if code ==1:
             probs_test1, lbls_test1, probs_test2, lbls_test2 = \
                 simple_run(cdrs_train, lbls_train, mask_train, lengths_train, weights_template, i,
