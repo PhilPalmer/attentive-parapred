@@ -130,7 +130,7 @@ Fix: Removed the `.` before the imported filenames in `library_commands.py` (see
 
 
 <details>
-<summary>9. Model files cannot be found</summary>
+<summary>9. Model files cannot be found. Which model to use?</summary>
 
 Steps to replicate:
 ```bash
@@ -168,7 +168,7 @@ Fix: Obtain the model weights or retrain the models from scratch?
 To rerun the analysis (hopefully regenerate the models )
 
 <details>
-<summary>9. Failed to run cross validation for all complexes</summary>
+<summary>10. :heavy_check_mark: Failed to run cross validation for all complexes</summary>
 
 Steps to replicate:
 ```bash
@@ -243,7 +243,7 @@ IndexError                                Traceback (most recent call last)
 IndexError: invalid index of a 0-dim tensor. Use `tensor.item()` in Python or `tensor.item<T>()` in C++ to convert a 0-dim tensor to a number
 ```
 
-Fix: I am unsure of the exact cause of this error and how to fix it
+Fix: As the error is caused by a print statement it can simply be commented out and the script will then run correctly (see [1c7b82d](https://github.com/PhilPalmer/attentive-parapred/commit/1c7b82daac39ed8084ad174e0015cac7e7157206))
 
 </details>
 
