@@ -117,8 +117,8 @@ def atrous_self_run(cdrs_train, lbls_train, masks_train, lengths_train, weights_
 
             total_time += time.time() - start
 
-        print("Epoch %d - loss is %f : " % (epoch, epoch_loss.data[0]/batches_done))
-        print("--- %s seconds ---" % (total_time))
+        # print("Epoch %d - loss is %f : " % (epoch, epoch_loss.data[0]/batches_done))
+        # print("--- %s seconds ---" % (total_time))
         times.append(total_time)
 
         model.eval()
