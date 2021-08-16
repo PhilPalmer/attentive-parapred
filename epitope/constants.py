@@ -20,8 +20,8 @@ batch_size = 3
 
 visualisation_pdb_number = 0
 visualisation_flag = False
-DATA_DIRECTORY = 'data/'
-PDBS_FORMAT = 'data/{}.pdb'
+DATA_DIRECTORY = '../paratope/data/'
+PDBS_FORMAT = '../paratope/data/{}.pdb'
 
 visualisation_pdb = "4bz1"
 
