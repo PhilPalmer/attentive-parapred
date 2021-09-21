@@ -449,7 +449,7 @@ def print_ag_weights(out_file_name = ag_default_out_file_name, model=AG()):
     print("pos2", pos2)
 
     weights = weights[pos1][0]
-    weights = weights[pos2][0]
+    # weights = weights[pos2][0]
 
     if exists(vis_dataset_file) and isfile(vis_dataset_file):
         with open(vis_dataset_file, "rb") as read_file:
