@@ -315,7 +315,7 @@ Fix: Obtain the model weights or retrain the models from scratch?
 
 
 <details>
-<summary>13. Failed to perform inference using the antigen model(s)</summary>
+<summary>13. :heavy_check_mark: Failed to perform inference using the antigen model(s)</summary>
 
 Steps to replicate:
 ```bash
@@ -348,7 +348,9 @@ Traceback (most recent call last):
 IndexError: invalid index of a 0-dim tensor. Use `tensor.item()` in Python or `tensor.item<T>()` in C++ to convert a 0-dim tensor to a number
 ```
 
-Fix: I am unsure of what the embeddings of the model represent and how to retrieve these weights so am unsure how to fix this error.
+Fix: I am unsure of what the embeddings of the model represent and how to retrieve these weights.
+
+Deleting the line giving the error seemed to fix this issue (see [ca5efca](https://github.com/PhilPalmer/attentive-parapred/commit/ca5efca60f20e0c0b59f8e0eb5f0683e7233915c)), however, I need to check if this is a valid solution
 
 </details>
 
