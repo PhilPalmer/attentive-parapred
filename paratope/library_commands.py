@@ -55,6 +55,7 @@ def get_predictor(id_model="FP"):
     from model import AbSeqModel
     from rnn_model import RNNModel
     from ag_experiment import AG
+    from cross_self_model import XSelf
     if _model is None:
         if id_model == "L":
             _model = RNNModel()
@@ -68,6 +69,9 @@ def get_predictor(id_model="FP"):
         if id_model == "AFP":
             _model = AG()
             weights = pkg_resources.resource_filename(__name__, "cv-ab-seq/ag_weights.pth.tar")
+        if id_model == "AFPX":
+            _model = XSelf()
+            weights = pkg_resources.resource_filename(__name__, "cv-ab-seq/atrous_self_weights.pth.tar")
 
         _model.load_state_dict(torch.load(weights))
         if use_cuda:

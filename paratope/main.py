@@ -34,7 +34,7 @@ def full_run(dataset="data/sabdab_27_jun_95_90.csv", out_weights="weights.h5"):
     print("all_lengths", lengths)
 
     # sample_weight = squeeze((lbls * 1.5 + 1) * masks)
-    model = AbSeqModel()
+    model = XSelf()
 
     # create your optimizer
     optimizer1 = optim.Adam(model.parameters(), weight_decay = 0.01,
