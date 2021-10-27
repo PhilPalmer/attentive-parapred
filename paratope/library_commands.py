@@ -161,12 +161,14 @@ def call_predictor(id_model, model, cdrs, masks, unpacked_masks, lengths):
         probs = model()
     if id_model == "AFP":
         probs = model()
+    if id_model == "AFPX":
+        probs = model()
     return probs
 
 def process_single_pdb(pdb_name, model_type, ab_h_chain, ab_l_chain):
     model = get_predictor(model_type)
     print("after model")
-    if model_type == "AFP":
+    if model_type == "AFP" or model_type == "AFPX":
         print_ag_weights(out_file_name=pdb_name, model=model)
     else:
         print_probabilities(model, model_type=model_type,out_file_name= pdb_name)
