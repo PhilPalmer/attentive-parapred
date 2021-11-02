@@ -16,6 +16,7 @@ from model import *
 from preprocessing import process_chains, process_ag_chains
 from evaluation_tools import *
 from ag_experiment import *
+from cross_self_model import XSelf
 
 DATA_DIRECTORY = 'data/'
 PDBS_FORMAT = 'data/{}.pdb'
@@ -324,7 +325,7 @@ def print_probabilities(out_file_name = default_out_file_name):
 
 def print_ag_weights(out_file_name = ag_default_out_file_name):
     print("in ag visual")
-    model = AG()
+    model = Xself()
     model.load_state_dict(torch.load("cv-ab-seq/run-0-fold-0.pth.tar"))
     model.eval()
 

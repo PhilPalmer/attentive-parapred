@@ -73,9 +73,11 @@ def get_predictor(id_model="FP"):
             _model = XSelf()
             weights = pkg_resources.resource_filename(__name__, "cv-ab-seq/atrous_self_weights.pth.tar")
 
-        _model.load_state_dict(torch.load(weights))
         if use_cuda:
+            _model.load_state_dict(torch.load(weights))
             _model.cuda()
+        else:
+            _model.load_state_dict(torch.load(weights, map_location=torch.device('cpu')))
     return _model
 
 def preprocess_cdr_seq(seqs, chain):
