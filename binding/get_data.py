@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+import os.path
 
 from constants import *
 
@@ -14,4 +15,5 @@ def html_to_csv(url, csv):
   df.to_csv(csv)
 
 if __name__ == '__main__':
-  html_to_csv(AFFINITY_URL, AFFINITY_CSV)
+  if not os.path.exists(AFFINITY_CSV):
+    html_to_csv(AFFINITY_URL, AFFINITY_CSV)
