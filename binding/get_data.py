@@ -1,6 +1,6 @@
-import requests
-import pandas as pd
+import urllib
 import os.path
+import pandas as pd
 
 from constants import *
 
@@ -10,7 +10,7 @@ def html_to_csv(url, csv):
   :param url: URL of HTML webpage containing tabular data
   :param csv: Output CSV file path
   """
-  html = requests.get(url).content
+  html = urllib.request.urlopen(url).read()
   df = pd.read_html(html)[-1]
   df.to_csv(csv)
 
