@@ -30,7 +30,7 @@ def download_pdbs(pdb_list, data_dir):
 
 def download_affinity_pdbs(affinity_csv, data_dir):
   """
-  Download PDB files from input Affinity CSV file.
+  Download PDB files listed in input Affinity CSV file if they don't already exist in the specified data directory.
   :param affinity_csv: Affinity DB CSV file path containing the column `Complex` for PDB codes
   :param data_dir: The directory where the downloaded file will be saved
   """
@@ -55,5 +55,24 @@ def download_data(data_dir=DATA_DIRECTORY, affinity_url=AFFINITY_URL, affinity_c
     html_to_csv(affinity_url, affinity_csv)
   download_affinity_pdbs(affinity_csv, data_dir)
 
+def clean_sabdab_data(sabdab_csv=SABDAB_CSV, sabdab_tsv=SABDAB_TSV):
+  """
+  Get clean list of CSV filtered SAbDab complexes from full SAbDab structural database.
+  (This fixes the original CSV file in the repository which was malformed as the commas had not been escaped properly).
+  :param sabdab_csv: CSV file path for filtered list of SAbDab complexes of interest to be overwritten
+  :param sabdab_tsv: TSV summary file path for full SAbDab structural database
+  """
+  # Get unique IDs for each PDB file in the SabDab input file
+  sabdab_df = pd.read_csv(sabdab_csv)
+  sabdab_df['id'] = sabdab_df['pdb'] + sabdab_df['Hchain'] + sabdab_df['Lchain'] + sabdab_df['antigen_chain']
+  sabdab_ids = sabdab_df['id'].tolist()
+  # Keep only those rows of interest from the full SabDab database input file
+  sabdab_df = pd.read_csv(sabdab_tsv, sep='\t')
+  sabdab_df['id'] = sabdab_df['pdb'] + sabdab_df['Hchain'] + sabdab_df['Lchain'] + sabdab_df['antigen_chain']
+  sabdab_df = sabdab_df[sabdab_df['id'].isin(sabdab_ids)]
+  del sabdab_df['id']
+  sabdab_df.to_csv(sabdab_csv, index=False)
+
 if __name__ == '__main__':
+  # clean_sabdab_data()
   download_data()
