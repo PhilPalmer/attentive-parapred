@@ -16,7 +16,7 @@ def html_to_csv(download_url, csv_fname):
   html = urllib.request.urlopen(download_url).read()
   df = pd.read_html(html)[-1]
   df.columns = df.columns.str.replace('<>', '')
-  df.to_csv(csv_fname)
+  df.to_csv(csv_fname, index=False)
 
 def download_pdbs(pdb_list, data_dir):
   """
@@ -83,8 +83,7 @@ def get_predictions(paratope_dir=PARATOPE_DIRECTORY, sabdab_csv=SABDAB_CSV, prob
   """
   sabdab_df = pd.read_csv(sabdab_csv)
   sabdab_df = sabdab_df[sabdab_df['delta_g'] != 'None']
-  # pdb_list = sabdab_df['pdb'].tolist()
-  pdb_list = ['5mi0', '2r56', '1sy6']
+  pdb_list = sabdab_df['pdb'].tolist() # pdb_list = ['5mi0', '2r56', '1sy6']
   probs_dict = {'pdb': [], 'atom': [], 'residue': [], 'paratope_probability': [], 'chain_id': [], 'res_seq_num': []}
   for pdb_code in pdb_list:
     # Get predictions
@@ -107,8 +106,7 @@ def get_predictions(paratope_dir=PARATOPE_DIRECTORY, sabdab_csv=SABDAB_CSV, prob
   probs_df = pd.DataFrame(probs_dict)
   # Filter by binding probability
   # probs_df[probs_df['paratope_probability'].astype(float) > 0.95]
-  probs_df.to_csv(probs_csv)
-  return probs_df
+  probs_df.to_csv(probs_csv, index=False)
 
 if __name__ == '__main__':
   # download_data()
