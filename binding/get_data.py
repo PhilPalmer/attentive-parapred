@@ -74,11 +74,12 @@ def clean_sabdab_data(sabdab_csv=SABDAB_CSV, sabdab_tsv=SABDAB_TSV):
   del sabdab_df['id']
   sabdab_df.to_csv(sabdab_csv, index=False)
 
-def get_predictions(paratope_dir=PARATOPE_DIRECTORY, sabdab_csv=SABDAB_CSV):
+def get_predictions(paratope_dir=PARATOPE_DIRECTORY, sabdab_csv=SABDAB_CSV, probs_csv=PROBS_CSV):
   """
   Get binding probability predictions for complexes with binding strength values
   :param data_dir: Path to the directory containing the paratope files
   :param sabdab_csv: CSV file path for filtered list of SAbDab complexes of interest to be overwritten
+  :probs_df: CSV file path for output binding probabilities
   """
   sabdab_df = pd.read_csv(sabdab_csv)
   sabdab_df = sabdab_df[sabdab_df['delta_g'] != 'None']
@@ -103,9 +104,11 @@ def get_predictions(paratope_dir=PARATOPE_DIRECTORY, sabdab_csv=SABDAB_CSV):
         probs_dict['paratope_probability'].append(line[60:66])
         probs_dict['chain_id'].append(line[21])
         probs_dict['res_seq_num'].append(line[22:26])
+  probs_df = pd.DataFrame(probs_dict)
   # Filter by binding probability
   # probs_df[probs_df['paratope_probability'].astype(float) > 0.95]
-  return pd.DataFrame(probs_dict)
+  probs_df.to_csv(probs_csv)
+  return probs_df
 
 if __name__ == '__main__':
   # download_data()
