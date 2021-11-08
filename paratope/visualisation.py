@@ -415,6 +415,7 @@ def print_ag_weights(out_file_name = ag_default_out_file_name, model=AG()):
         model.cuda()
 
     print("writing to visualisation file")
+    visualisation_pdb_file_name = PDBS_FORMAT.format(visualisation_pdb)
     #vis_dataset = build_the_pdb_data(visualisation_pdb)
     vis_dataset = build_the_ag_pdb_data(visualisation_pdb)
     vis_cdrs, vis_masks, vis_lbls, vis_lengths, vis_ag, vis_ag_masks, dist_mat = \

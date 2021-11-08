@@ -171,7 +171,7 @@ def process_single_pdb(pdb_name, model_type, ab_h_chain, ab_l_chain):
     model = get_predictor(model_type)
     print("after model")
     if model_type == "AFP" or model_type == "AFPX":
-        print_ag_weights(out_file_name=pdb_name, model=model)
+        print_ag_weights(out_file_name=pdb_name, model=model, visualisation_pdb=pdb_name)
     else:
         print_probabilities(model, model_type=model_type,out_file_name= pdb_name)
 
