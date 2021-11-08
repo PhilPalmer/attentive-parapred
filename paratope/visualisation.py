@@ -400,7 +400,7 @@ def print_probabilities(model, model_type = "FP", out_file_name = default_out_fi
             new_line += "\n"
             append_file.write(new_line)
 
-def print_ag_weights(out_file_name = ag_default_out_file_name, model=AG()):
+def print_ag_weights(out_file_name = ag_default_out_file_name, model=AG(), visualisation_pdb=visualisation_pdb):
     """
     Writes attentional coefficients when attending over antigen amino acids.
     :param out_file_name: output file name
