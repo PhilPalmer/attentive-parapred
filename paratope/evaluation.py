@@ -12,6 +12,8 @@ from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch import index_select
 from sklearn.metrics import confusion_matrix, roc_auc_score, matthews_corrcoef
 import pickle
+import io
+import torch
 
 from atrous_run import *
 from attentionRNN_run import *
@@ -20,6 +22,12 @@ from antigen_run import *
 from atrous_self_run import *
 from rnn_run import *
 from xself_run import *
+
+class CPU_Unpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        if module == 'torch.storage' and name == '_load_from_bytes':
+            return lambda b: torch.load(io.BytesIO(b), map_location='cpu')
+        else: return super().find_class(module, name)
 
 def kfold_cv_eval(dataset, output_file="crossval-data.p",
                   weights_template="weights-fold-{}.h5", seed=0):
@@ -282,7 +290,8 @@ def open_crossval_results(folder="cv-ab-seq", num_results=NUM_ITERATIONS,
     for r in range(num_results):
         result_filename = "{}/run-{}.p".format(folder, r)
         with open(result_filename, "rb") as f:
-            lbl_mat, prob_mat, mask_mat, all_lbls, all_probs = pickle.load(f)
+            # lbl_mat, prob_mat, mask_mat, all_lbls, all_probs = pickle.load(f)
+            lbl_mat, prob_mat, mask_mat, all_lbls, all_probs = CPU_Unpickler(f).load()
 
             lbl_mat = lbl_mat.data.cpu().numpy()
             prob_mat = prob_mat.data.cpu().numpy()
