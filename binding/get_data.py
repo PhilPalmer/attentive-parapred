@@ -74,12 +74,14 @@ def clean_sabdab_data(sabdab_csv=SABDAB_CSV, sabdab_tsv=SABDAB_TSV):
   del sabdab_df['id']
   sabdab_df.to_csv(sabdab_csv, index=False)
 
-def get_predictions(paratope_dir=PARATOPE_DIRECTORY, sabdab_csv=SABDAB_CSV, probs_csv=PROBS_CSV):
+def get_predictions(paratope_dir=PARATOPE_DIRECTORY, data_directory=DATA_DIRECTORY, sabdab_csv=SABDAB_CSV, probs_csv=PROBS_CSV, python_path=PYTHON_PATH):
   """
   Get binding probability predictions for complexes with binding strength values
-  :param data_dir: Path to the directory containing the paratope files
+  :param paratope_dir: Path to the directory containing the paratope files
+  :param data_dir: The data directory inside the paratope directory
   :param sabdab_csv: CSV file path for filtered list of SAbDab complexes of interest to be overwritten
-  :probs_df: CSV file path for output binding probabilities
+  :probs_csv: CSV file path for output binding probabilities
+  :python_path: File path to python executable file
   """
   sabdab_df = pd.read_csv(sabdab_csv)
   sabdab_df = sabdab_df[sabdab_df['delta_g'] != 'None']
@@ -87,10 +89,10 @@ def get_predictions(paratope_dir=PARATOPE_DIRECTORY, sabdab_csv=SABDAB_CSV, prob
   probs_dict = {'pdb': [], 'atom': [], 'residue': [], 'paratope_probability': [], 'chain_id': [], 'res_seq_num': []}
   for pdb_code in pdb_list:
     # Get predictions
-    bash_cmd = f"cd {paratope_dir}; python library_commands.py pdb {pdb_code} --model AFPX"
+    bash_cmd = f"cd {paratope_dir}; {python_path} library_commands.py pdb {pdb_code} --model AFPX"
     subprocess.run(bash_cmd, shell=True)
     # Save predictions
-    pdb_fname = f"{paratope_dir}/{pdb_code}"
+    pdb_fname = f"{paratope_dir}/{data_directory}/{pdb_code}.pdb"
     atom = 0
     with open(pdb_fname) as f:
         lines = [line.rstrip() for line in f]
