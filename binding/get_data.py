@@ -3,6 +3,7 @@ from Bio.PDB import PDBList
 import os
 import pandas as pd
 import subprocess
+import sys
 import urllib.request
 
 from constants import *
@@ -74,18 +75,18 @@ def clean_sabdab_data(sabdab_csv=SABDAB_CSV, sabdab_tsv=SABDAB_TSV):
   del sabdab_df['id']
   sabdab_df.to_csv(sabdab_csv, index=False)
 
-def get_predictions(paratope_dir=PARATOPE_DIRECTORY, data_directory=DATA_DIRECTORY, sabdab_csv=SABDAB_CSV, probs_csv=PROBS_CSV, python_path=PYTHON_PATH):
+def get_predictions(paratope_dir=PARATOPE_DIRECTORY, data_directory=DATA_DIRECTORY, sabdab_csv=SABDAB_CSV, probs_csv=PROBS_CSV):
   """
   Get binding probability predictions for complexes with binding strength values
   :param paratope_dir: Path to the directory containing the paratope files
   :param data_dir: The data directory inside the paratope directory
   :param sabdab_csv: CSV file path for filtered list of SAbDab complexes of interest to be overwritten
   :probs_csv: CSV file path for output binding probabilities
-  :python_path: File path to python executable file
   """
   sabdab_df = pd.read_csv(sabdab_csv)
   sabdab_df = sabdab_df[sabdab_df['delta_g'] != 'None']
   pdb_list = sabdab_df['pdb'].tolist() # pdb_list = ['5mi0', '2r56', '1sy6']
+  python_path = sys.executable
   probs_dict = {'pdb': [], 'atom': [], 'residue': [], 'paratope_probability': [], 'chain_id': [], 'res_seq_num': []}
   for pdb_code in pdb_list:
     # Get predictions
