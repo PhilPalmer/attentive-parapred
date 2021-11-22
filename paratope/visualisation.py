@@ -208,7 +208,26 @@ def get_residue_numbers(vis_cdrs):
     return vis_cdrs_h1_numbers, vis_cdrs_h2_numbers, vis_cdrs_h3_numbers, \
            vis_cdrs_l1_numbers, vis_cdrs_l2_numbers, vis_cdrs_l3_numbers
 
-def print_probabilities(model, model_type = "FP", out_file_name = default_out_file_name):
+def print_delta_g(model, model_type = "D", visualisation_pdb = visualisation_pdb):
+
+    if use_cuda:
+        model.cuda()
+
+    vis_dataset = build_the_pdb_data(visualisation_pdb)
+    vis_cdrs, vis_masks, vis_lbls, vis_lengths = \
+        vis_dataset["cdrs"], vis_dataset["masks"], vis_dataset["lbls"], vis_dataset["lengths"]
+
+    vis_cdrs, vis_masks, vis_lengths, vis_lbls, vis_index = vis_sort_batch(vis_cdrs, vis_masks, list(vis_lengths), vis_lbls)
+
+    vis_unpacked_masks = vis_masks
+    vis_packed_input = pack_padded_sequence(vis_masks, list(vis_lengths), batch_first=True)
+    vis_masks, _ = pad_packed_sequence(vis_packed_input, batch_first=True)
+
+    print("IN {model_type}")
+    vis_probs = model(vis_cdrs, vis_unpacked_masks)
+    print("vis_probs", vis_probs.detach().clone())
+
+def print_probabilities(model, model_type = "FP", out_file_name = default_out_file_name, visualisation_pdb = visualisation_pdb):
     #model.load_state_dict(torch.load("cv-ab-seq/weights/run-0-fold-1.pth.tar"))
 
     if use_cuda:

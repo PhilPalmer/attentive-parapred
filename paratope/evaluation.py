@@ -31,9 +31,9 @@ def kfold_cv_eval(dataset, output_file="crossval-data.p",
     :param seed: cv
     :return:
     """
-    cdrs, lbls, masks, lengths, ag, ag_masks, ag_lengths, dist_mat = \
+    cdrs, lbls, masks, lengths, ag, ag_masks, ag_lengths, dist_mat, delta_gs = \
         dataset["cdrs"], dataset["lbls"], dataset["masks"], dataset["lengths"],\
-        dataset["ag"], dataset["ag_masks"], dataset["ag_lengths"], dataset["dist_mat"]
+        dataset["ag"], dataset["ag_masks"], dataset["ag_lengths"], dataset["dist_mat"], dataset["delta_gs"]
 
 
     print("cdrs", cdrs.shape)
@@ -59,6 +59,9 @@ def kfold_cv_eval(dataset, output_file="crossval-data.p",
         lengths_train = [lengths[i] for i in train_idx]
         lengths_test = [lengths[i] for i in test_idx]
 
+        delta_gs_train = [delta_gs[i] for i in train_idx]
+        delta_gs_test = [delta_gs[i] for i in test_idx]
+
         ag_lengths_train = [ag_lengths[i] for i in train_idx]
         ag_lengths_test = [ag_lengths[i] for i in test_idx]
 
@@ -83,7 +86,7 @@ def kfold_cv_eval(dataset, output_file="crossval-data.p",
         ag_masks_test = index_select(ag_masks, 0, test_idx)
         dist_mat_test = index_select(dist_mat, 0, test_idx)
 
-        code = 7
+        code = 3
         if code ==1:
             probs_test1, lbls_test1, probs_test2, lbls_test2 = \
                 simple_run(cdrs_train, lbls_train, mask_train, lengths_train, weights_template, i,
@@ -95,8 +98,8 @@ def kfold_cv_eval(dataset, output_file="crossval-data.p",
 
         if code == 3:
             probs_test1, lbls_test1, probs_test2, lbls_test2 = \
-                atrous_run(cdrs_train, lbls_train, mask_train, lengths_train, weights_template, i,
-                                     cdrs_test, lbls_test, mask_test, lengths_test)
+                atrous_run(cdrs_train, lbls_train, mask_train, lengths_train, delta_gs_train, weights_template, i,
+                                     cdrs_test, lbls_test, mask_test, lengths_test, delta_gs_test)
 
         if code == 4:
             probs_test1, lbls_test1, probs_test2, lbls_test2 = \
@@ -124,30 +127,30 @@ def kfold_cv_eval(dataset, output_file="crossval-data.p",
 
         print("test", file=track_f)
 
-        lbls_test2 = np.squeeze(lbls_test2)
-        all_lbls2 = np.concatenate((all_lbls2, lbls_test2))
-        all_lbls1.append(lbls_test1)
+    #     lbls_test2 = np.squeeze(lbls_test2)
+    #     all_lbls2 = np.concatenate((all_lbls2, lbls_test2))
+    #     all_lbls1.append(lbls_test1)
 
-        probs_test_pad = torch.zeros(probs_test1.data.shape[0], MAX_CDR_LENGTH, probs_test1.data.shape[2])
-        probs_test_pad[:probs_test1.data.shape[0], :probs_test1.data.shape[1], :] = probs_test1.data
+    #     probs_test_pad = torch.zeros(probs_test1.data.shape[0], MAX_CDR_LENGTH, probs_test1.data.shape[2])
+    #     probs_test_pad[:probs_test1.data.shape[0], :probs_test1.data.shape[1], :] = probs_test1.data
 
-        probs_test2 = np.squeeze(probs_test2)
-        #print(probs_test)
-        all_probs2 = np.concatenate((all_probs2, probs_test2))
-        #print(all_probs)
-        #print(type(all_probs))
+    #     probs_test2 = np.squeeze(probs_test2)
+    #     #print(probs_test)
+    #     all_probs2 = np.concatenate((all_probs2, probs_test2))
+    #     #print(all_probs)
+    #     #print(type(all_probs))
 
-        all_probs1.append(probs_test_pad)
+    #     all_probs1.append(probs_test_pad)
 
-        all_masks.append(mask_test)
+    #     all_masks.append(mask_test)
 
-    lbl_mat1 = torch.cat(all_lbls1)
-    prob_mat1 = torch.cat(all_probs1)
-    #print("end", all_probs)
-    mask_mat = torch.cat(all_masks)
+    # lbl_mat1 = torch.cat(all_lbls1)
+    # prob_mat1 = torch.cat(all_probs1)
+    # #print("end", all_probs)
+    # mask_mat = torch.cat(all_masks)
 
-    with open(output_file, "wb") as f:
-        pickle.dump((lbl_mat1, prob_mat1, mask_mat, all_lbls2, all_probs2), f)
+    # with open(output_file, "wb") as f:
+    #     pickle.dump((lbl_mat1, prob_mat1, mask_mat, all_lbls2, all_probs2), f)
 
 def helper_compute_metrics(matrices, aucs, mcorrs):
     matrices = np.stack(matrices)

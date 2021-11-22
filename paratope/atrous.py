@@ -22,6 +22,7 @@ class DilatedConv(nn.Module):
         self.elu = nn.ELU()
         self.dropout = nn.Dropout(0.3)
         self.fc = nn.Linear(512, 1, 1)
+        self.fc1 = nn.Linear(32, 1, 1)
 
         for m in self.modules():
             self.weights_init(m)
@@ -86,6 +87,9 @@ class DilatedConv(nn.Module):
 
         x = self.fc(x)
 
+        x = torch.squeeze(x)
+        x = self.fc1(x)
+        x = torch.squeeze(x)
         #print("x after fc", x.data.shape)
 
         return x

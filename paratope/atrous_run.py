@@ -7,14 +7,14 @@ import torch.optim as optim
 from torch.optim import lr_scheduler
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch import index_select
-from sklearn.metrics import confusion_matrix, roc_auc_score, matthews_corrcoef
+from sklearn.metrics import confusion_matrix, roc_auc_score, matthews_corrcoef, r2_score, mean_squared_error
 
 from atrous import *
 from constants import *
 from evaluation_tools import *
 
-def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, weights_template, weights_template_number,
-               cdrs_test, lbls_test, masks_test, lengths_test):
+def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, delta_gs_train, weights_template, weights_template_number,
+               cdrs_test, lbls_test, masks_test, lengths_test, delta_gs_test):
 
     print("dilated run", file=print_file)
     model = DilatedConv()
@@ -34,6 +34,7 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, weights_templ
     total_lbls = lbls_train
     total_masks = masks_train
     total_lengths = lengths_train
+    total_delta_gs = delta_gs_train
 
     if use_cuda:
         print("using cuda")
@@ -41,9 +42,11 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, weights_templ
         total_input = total_input.cuda()
         total_lbls = total_lbls.cuda()
         total_masks = total_masks.cuda()
+        # total_delta_gs = total_delta_gs.cuda()
         cdrs_test = cdrs_test.cuda()
         lbls_test = lbls_test.cuda()
         masks_test = masks_test.cuda()
+        # delta_gs_test = delta_gs_test.cuda()
 
     for epoch in range(epochs):
         model.train(True)
@@ -52,8 +55,8 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, weights_templ
 
         batches_done=0
 
-        total_input, total_masks, total_lengths, total_lbls = \
-            permute_training_data(total_input, total_masks, total_lengths, total_lbls)
+        total_input, total_masks, total_lengths, total_delta_gs, total_lbls = \
+            permute_training_data(total_input, total_masks, total_lengths, total_delta_gs, total_lbls)
 
         for j in range(0, cdrs_train.shape[0], batch_size):
             batches_done +=1
@@ -66,8 +69,9 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, weights_templ
             masks = index_select(total_masks, 0, interval)
             lengths = total_lengths[j:j + batch_size]
             lbls = index_select(total_lbls, 0, interval)
+            delta_gs = total_delta_gs[interval]
 
-            input, masks, lengths, lbls = sort_batch(input, masks, list(lengths), lbls)
+            input, masks, lengths, lbls, delta_gs = sort_batch(input, masks, list(lengths), lbls, delta_gs)
 
             unpacked_masks = masks
 
@@ -82,11 +86,9 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, weights_templ
 
             output = model(input, unpacked_masks)
 
-            loss_weights = (unpacked_lbls * 1.5 + 1) * unpacked_masks
-            max_val = (-output).clamp(min=0)
-            loss = loss_weights * (output - output * unpacked_lbls + max_val + ((-max_val).exp() + (-output - max_val).exp()).log())
-            masks_added = masks.sum()
-            loss = loss.sum() / masks_added
+            delta_gs = torch.FloatTensor(delta_gs)
+            mse_loss = nn.MSELoss()
+            loss = mse_loss(output, delta_gs)
 
             #print("Epoch %d - Batch %d has loss %d " % (epoch, j, loss.data), file=monitoring_file)
             epoch_loss +=loss
@@ -95,12 +97,12 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, weights_templ
 
             loss.backward()
             optimizer.step()
-        print("Epoch %d - loss is %f : " % (epoch, epoch_loss.data[0]/batches_done))
+        # print("Epoch %d - loss is %f : " % (epoch, epoch_loss.data[0]/batches_done))
 
         model.eval()
 
-        cdrs_test2, masks_test2, lengths_test2, lbls_test2 = sort_batch(cdrs_test, masks_test, list(lengths_test),
-                                                                    lbls_test)
+        cdrs_test2, masks_test2, lengths_test2, lbls_test2, delta_gs_test2 = sort_batch(cdrs_test, masks_test, list(lengths_test),
+                                                                    lbls_test, np.asarray(delta_gs_test))
 
         unpacked_masks_test2 = masks_test2
 
@@ -114,17 +116,12 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, weights_templ
         probs_test2 = probs_test2.data.cpu().numpy().astype('float32')
         lbls_test2 = lbls_test2.data.cpu().numpy().astype('int32')
 
-        probs_test2 = flatten_with_lengths(probs_test2, lengths_test2)
-        lbls_test2 = flatten_with_lengths(lbls_test2, lengths_test2)
-
-        print("Roc", roc_auc_score(lbls_test2, probs_test2))
-
     torch.save(model.state_dict(), weights_template.format(weights_template_number))
 
     print("test", file=track_f)
     model.eval()
 
-    cdrs_test, masks_test, lengths_test, lbls_test = sort_batch(cdrs_test, masks_test, list(lengths_test), lbls_test)
+    cdrs_test, masks_test, lengths_test, lbls_test, delta_gs_test = sort_batch(cdrs_test, masks_test, list(lengths_test), lbls_test, np.asarray(delta_gs_test))
 
     unpacked_masks_test = masks_test
     packed_input = pack_padded_sequence(masks_test, list(lengths_test), batch_first=True)
@@ -134,15 +131,12 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, weights_templ
 
     # K.mean(K.equal(lbls_test, K.round(y_pred)), axis=-1)
 
-    sigmoid = nn.Sigmoid()
-    probs_test = sigmoid(probs_test)
-
     probs_test1 = probs_test.data.cpu().numpy().astype('float32')
     lbls_test1 = lbls_test.data.cpu().numpy().astype('int32')
 
-    probs_test1 = flatten_with_lengths(probs_test1, list(lengths_test))
-    lbls_test1 = flatten_with_lengths(lbls_test1, list(lengths_test))
-
-    print("Roc", roc_auc_score(lbls_test1, probs_test1))
+    print(f"probs_test1: {probs_test1}")
+    print(f"delta_gs_test: {delta_gs_test}")
+    print("R2", r2_score(delta_gs_test, probs_test1))
+    print("MSE", mean_squared_error(delta_gs_test, probs_test1))
 
     return probs_test, lbls_test, probs_test1, lbls_test1  # get them in kfold, append, concatenate do roc on them

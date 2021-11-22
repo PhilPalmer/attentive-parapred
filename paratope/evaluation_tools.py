@@ -8,13 +8,14 @@ from torch import index_select
 
 from constants import *
 
-def sort_batch(cdrs, masks, lengths, lbls):
+def sort_batch(cdrs, masks, lengths, lbls, delta_gs):
     """
     Sort antibody amino acid sequences by length -- for RNN
     :param cdrs:
     :param masks:
     :param lengths:
     :param lbls:
+    :param delta_gs:
     :return: sorted input
     """
     order = np.argsort(lengths)
@@ -28,7 +29,8 @@ def sort_batch(cdrs, masks, lengths, lbls):
     cdrs = torch.index_select(cdrs, 0, index)
     lbls = torch.index_select(lbls, 0, index)
     masks = torch.index_select(masks, 0, index)
-    return cdrs, masks, lengths, lbls
+    delta_gs = delta_gs[index]
+    return cdrs, masks, lengths, lbls, delta_gs
 
 def sort_ag_batch(cdrs, masks, lengths, lbls, ag, ag_masks, dist):
     order = np.argsort(lengths)
@@ -132,7 +134,7 @@ def permute_training_ag_data(cdrs, masks, lengths, lbls, ag, ag_masks, ag_length
 
     return cdrs, masks, lengths, lbls, ag, ag_masks, ag_lengths, dist
 
-def permute_training_data(cdrs, masks, lengths, lbls):
+def permute_training_data(cdrs, masks, lengths, delta_gs, lbls):
     """
     Shuffle training data
     :param cdrs:
@@ -149,8 +151,9 @@ def permute_training_data(cdrs, masks, lengths, lbls):
     lbls = torch.index_select(lbls, 0, index)
     masks = torch.index_select(masks, 0, index)
     lengths = [lengths[i] for i in index]
+    delta_gs = np.asarray([delta_gs[i] for i in index])
 
-    return cdrs, masks, lengths, lbls
+    return cdrs, masks, lengths, delta_gs, lbls
 
 def flatten_with_lengths(matrix, lengths):
     seqs = []
