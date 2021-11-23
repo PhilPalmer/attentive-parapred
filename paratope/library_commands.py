@@ -40,7 +40,7 @@ from parsing import get_pdb_structure
 from preprocessing import process_chains_without_labels, seq_to_one_hot_without_chain, seq_to_one_hot, find_chain
 from evaluation_tools import sort_batch_without_labels
 from search import NeighbourSearch
-from visualisation import print_probabilities, print_ag_weights
+from visualisation import print_delta_g, print_probabilities, print_ag_weights
 
 _model = None
 
@@ -72,6 +72,9 @@ def get_predictor(id_model="FP"):
         if id_model == "AFPX":
             _model = XSelf()
             weights = pkg_resources.resource_filename(__name__, "cv-ab-seq/atrous_self_weights.pth.tar")
+        if id_model == "AFPXB":
+            _model = XSelf()
+            weights = pkg_resources.resource_filename(__name__, "cv-ab-seq/atrous_self_bind_weights.pth.tar")
 
         if use_cuda:
             _model.load_state_dict(torch.load(weights))
@@ -165,6 +168,8 @@ def call_predictor(id_model, model, cdrs, masks, unpacked_masks, lengths):
         probs = model()
     if id_model == "AFPX":
         probs = model()
+    if id_model == "AFPXB":
+        probs = model()
     return probs
 
 def process_single_pdb(pdb_name, model_type, ab_h_chain, ab_l_chain):
@@ -172,6 +177,8 @@ def process_single_pdb(pdb_name, model_type, ab_h_chain, ab_l_chain):
     print("after model")
     if model_type == "AFP" or model_type == "AFPX":
         print_ag_weights(out_file_name=pdb_name, model=model, visualisation_pdb=pdb_name)
+    elif model_type == "AFPXB":
+        print_delta_g(model, visualisation_pdb=pdb_name)
     else:
         print_probabilities(model, model_type=model_type,out_file_name= pdb_name)
 

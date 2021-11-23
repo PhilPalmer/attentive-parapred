@@ -30,6 +30,7 @@ def load_chains(csv_file):
         ab_h_chain = column['Hchain']
         ab_l_chain = column['Lchain']
         antigen_chain = column['antigen_chain']
+        delta_g = column['delta_g']
         cdrs, ag_atoms, ag, ag_names = get_pdb_structure(PDBS_FORMAT.format(pdb_name), ab_h_chain, ab_l_chain, antigen_chain)
 
         #ag_item = ag[ag_names[0]]
@@ -37,7 +38,7 @@ def load_chains(csv_file):
 
         ag_search = NeighbourSearch(ag_atoms)  # replace this
 
-        yield ag_search, cdrs, pdb_name, ag
+        yield ag_search, cdrs, pdb_name, ag, delta_g
         i = i + 1
 
 def residue_in_contact_with(res, c_search, dist):
@@ -377,6 +378,7 @@ def process_dataset(csv_file):
     all_lbls = []
     all_lengths = []
     all_masks = []
+    all_delta_gs = []
 
     all_ag = []
     all_ag_lengths = []
@@ -384,7 +386,7 @@ def process_dataset(csv_file):
 
     all_dist_mat = []
     all_max = 0
-    for ag_search, cdrs, pdb, ag in load_chains(csv_file):
+    for ag_search, cdrs, pdb, ag, delta_g in load_chains(csv_file):
         print("Processing PDB ", pdb)
 
         #cdrs, lbls, masks, (numresidues, numincontact), lengths = process_chains(ag_search, cdrs, max_cdr_length = MAX_CDR_LENGTH)
@@ -401,6 +403,7 @@ def process_dataset(csv_file):
         all_lbls.append(lbls)
         all_masks.append(masks)
         all_lengths.append(lengths)
+        all_delta_gs.append(delta_g)
 
         all_ag.append(ag)
         all_ag_masks.append(ag_masks)
@@ -428,6 +431,7 @@ def process_dataset(csv_file):
 
     flat_lengths = [item for sublist in all_lengths for item in sublist]
     ag_length = [item for sublist in all_ag_lengths for item in sublist]
+    delta_gs = np.repeat(all_delta_gs, len(cdr_names)) #.tolist()
 
     return {
         "cdrs" : cdrs,
@@ -439,7 +443,8 @@ def process_dataset(csv_file):
         "ag" : ag,
         "ag_masks": ag_masks,
         "ag_lengths": ag_length,
-        "dist_mat": dist_mat
+        "dist_mat": dist_mat,
+        "delta_gs": delta_gs
     }
 
 def open_dataset(dataset_cache="processed-dataset.p"):

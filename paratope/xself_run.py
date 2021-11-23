@@ -18,10 +18,10 @@ from evaluation_tools import *
 from cross_self_model import *
 
 def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
-               ag_train, ag_masks_train, ag_lengths_train, dist_mat_train,
+               ag_train, ag_masks_train, ag_lengths_train, dist_mat_train, delta_gs_train,
                weights_template, weights_template_number,
                cdrs_test, lbls_test, masks_test, lengths_test,
-               ag_test, ag_masks_test, ag_lengths_test, dist_test):
+               ag_test, ag_masks_test, ag_lengths_test, dist_test, delta_gs_test):
     """
 
     :param cdrs_train: antibody amino acids used for training
@@ -77,6 +77,7 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
     total_ag_input = ag_train
     total_ag_masks = ag_masks_train
     total_ag_lengths = ag_lengths_train
+    total_delta_gs = delta_gs_train
 
     if use_cuda:
         print("using cuda")
@@ -95,6 +96,8 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
 
         total_dist_train = total_dist_train.cuda()
         dist_test = dist_test.cuda()
+        # total_delta_gs = total_delta_gs.cuda()
+        # delta_gs_test = delta_gs_test.cuda()
 
     times = []
 
@@ -106,9 +109,9 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
         batches_done=0
 
         total_input, total_masks, total_lengths, total_lbls,\
-        total_ag_input, total_ag_masks, total_ag_lengths, total_dist_train = \
+        total_ag_input, total_ag_masks, total_ag_lengths, total_dist_train, total_delta_gs = \
             permute_training_ag_data(total_input, total_masks, total_lengths, total_lbls,
-                                     total_ag_input, total_ag_masks, total_ag_lengths, total_dist_train)
+                                     total_ag_input, total_ag_masks, total_ag_lengths, total_dist_train, total_delta_gs)
 
         total_time = 0
 
@@ -128,19 +131,18 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
             ag_masks = index_select(total_ag_masks, 0, interval)
 
             dist = index_select(total_dist_train, 0, interval)
+            delta_gs = total_delta_gs[interval]
 
-            input, masks, lengths, lbls, ag, ag_masks, dist = \
-                sort_ag_batch(input, masks, list(lengths), lbls, ag_input, ag_masks, dist)
+            input, masks, lengths, lbls, ag, ag_masks, dist, delta_gs = \
+                sort_ag_batch(input, masks, list(lengths), lbls, ag_input, ag_masks, dist, delta_gs)
 
             output, _ = model(input, masks, ag_input, ag_masks, dist)
 
-            loss_weights = (lbls * 1.5 + 1) * masks
-            max_val = (-output).clamp(min=0)
-            loss = loss_weights * \
-                   (output - output * lbls + max_val + ((-max_val).exp() + (-output - max_val).exp()).log())
-            masks_added = masks.sum()
-            loss = loss.sum() / masks_added
-            print("Epoch %d - Batch %d has loss %d " % (epoch, j, loss.data), file=monitoring_file)
+            delta_gs = torch.FloatTensor(delta_gs)
+            mse_loss = nn.MSELoss()
+            loss = mse_loss(output, delta_gs)
+
+            print("Epoch %d - Batch %d has loss %d " % (epoch, j, loss.data)) # , file=monitoring_file
             epoch_loss +=loss
             model.zero_grad()
 
@@ -158,8 +160,8 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
 
         model.eval()
 
-        cdrs_test2, masks_test2, lengths_test2, lbls_test2, ag_test2, ag_masks_test2, dist_test2 = \
-            sort_ag_batch(cdrs_test, masks_test, list(lengths_test), lbls_test, ag_test, ag_masks_test, dist_test)
+        cdrs_test2, masks_test2, lengths_test2, lbls_test2, ag_test2, ag_masks_test2, dist_test2, delta_gs_test2 = \
+            sort_ag_batch(cdrs_test, masks_test, list(lengths_test), lbls_test, ag_test, ag_masks_test, dist_test, delta_gs_test)
 
 
         probs_test2, _= model(cdrs_test2, masks_test2, ag_test2, ag_masks_test2, dist_test2)
@@ -171,10 +173,10 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
         probs_test2 = probs_test2.data.cpu().numpy().astype('float32')
         lbls_test2 = lbls_test2.data.cpu().numpy().astype('int32')
 
-        probs_test2 = flatten_with_lengths(probs_test2, lengths_test2)
-        lbls_test2 = flatten_with_lengths(lbls_test2, lengths_test2)
+        # probs_test2 = flatten_with_lengths(probs_test2, lengths_test2)
+        # lbls_test2 = flatten_with_lengths(lbls_test2, lengths_test2)
 
-        print("Roc", roc_auc_score(lbls_test2, probs_test2))
+        # print("Roc", roc_auc_score(lbls_test2, probs_test2))
 
     print("Saving")
 
@@ -188,8 +190,8 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
 
     model.eval()
 
-    cdrs_test, masks_test, lengths_test, lbls_test, ag_test, ag_masks_test, dist_test = \
-        sort_ag_batch(cdrs_test, masks_test, list(lengths_test), lbls_test, ag_test, ag_masks_test, dist_test)
+    cdrs_test, masks_test, lengths_test, lbls_test, ag_test, ag_masks_test, dist_test, delta_gs_test = \
+        sort_ag_batch(cdrs_test, masks_test, list(lengths_test), lbls_test, ag_test, ag_masks_test, dist_test, delta_gs_test)
 
     probs_test, _ = model(cdrs_test, masks_test, ag_test, ag_masks_test, dist_test)
 
@@ -202,9 +204,9 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
     probs_test1 = probs_test.data.cpu().numpy().astype('float32')
     lbls_test1 = lbls_test.data.cpu().numpy().astype('int32')
 
-    probs_test1 = flatten_with_lengths(probs_test1, list(lengths_test))
-    lbls_test1 = flatten_with_lengths(lbls_test1, list(lengths_test))
+    # probs_test1 = flatten_with_lengths(probs_test1, list(lengths_test))
+    # lbls_test1 = flatten_with_lengths(lbls_test1, list(lengths_test))
 
-    print("Roc", roc_auc_score(lbls_test1, probs_test1))
+    # print("Roc", roc_auc_score(lbls_test1, probs_test1))
 
     return probs_test, lbls_test, probs_test1, lbls_test1  # get them in kfold, append, concatenate do roc on them

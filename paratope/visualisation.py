@@ -400,6 +400,21 @@ def print_probabilities(model, model_type = "FP", out_file_name = default_out_fi
             new_line += "\n"
             append_file.write(new_line)
 
+def print_delta_g(model, visualisation_pdb = visualisation_pdb):
+    model.eval()
+
+    if use_cuda:
+        model.cuda()
+
+    vis_dataset = build_the_ag_pdb_data(visualisation_pdb)
+    vis_cdrs, vis_masks, vis_lbls, vis_lengths, vis_ag, vis_ag_masks, dist_mat = \
+        vis_dataset["cdrs"], vis_dataset["masks"], vis_dataset["lbls"], vis_dataset["lengths"], \
+        vis_dataset["ag"], vis_dataset["ag_masks"], vis_dataset["dist_mat"]
+    print("delta_g", vis_dataset["delta_g"])
+
+    vis_probs, weights = model(vis_cdrs, vis_masks, vis_ag, vis_ag_masks, dist_mat)
+    print("vis_probs", vis_probs)
+
 def print_ag_weights(out_file_name = ag_default_out_file_name, model=AG(), visualisation_pdb=visualisation_pdb):
     """
     Writes attentional coefficients when attending over antigen amino acids.

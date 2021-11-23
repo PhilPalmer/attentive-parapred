@@ -49,6 +49,7 @@ class XSelf(nn.Module):
         self.dropout = nn.Dropout(0.15)
         self.dropout2 = nn.Dropout(0.5)
         self.fc = nn.Linear(768, 1, 1)  # dense prediction layer
+        self.fc1 = nn.Linear(32, 1, 1)
         self.softmax = nn.Softmax(dim=-1)
         self.lrelu = nn.LeakyReLU(0.2)
 
@@ -220,6 +221,9 @@ class XSelf(nn.Module):
 
         x = self.fc(x)
 
+        x = torch.squeeze(x)
+        x = self.fc1(x)
+        x = torch.squeeze(x)
         #print("x after fc", x, file=track_f)
 
         return x, w
