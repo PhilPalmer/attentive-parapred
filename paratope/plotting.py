@@ -2,6 +2,7 @@
 Helper functions for plotting the ROC curve and the Precision-Recall curve.
 """
 from sklearn import metrics
+from sklearn.metrics import r2_score
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
@@ -98,3 +99,18 @@ def plot_pr_curve(labels_test, probs_test, colours=("#0072CF", "#68ACE5"),
     ax.legend()
 
     return plot_fig
+
+def plot_r2(labels_test, probs_test, plot_fig=None):
+    labels_test = np.array(labels_test)
+    probs_test = np.array(probs_test)
+    if plot_fig is None:
+        plot_fig = plt.figure(figsize=(4.5, 3.5), dpi=300)
+    ax = plot_fig.gca()
+    ax.scatter(labels_test, probs_test)
+    ax.set_ylabel("Predicted ΔG")
+    ax.set_xlabel("Actual ΔG")
+    ax.set_title("$R^2$ Score: %.2f" % r2_score(labels_test, probs_test))
+    m, b = np.polyfit(labels_test, probs_test, 1)
+    ax.plot(labels_test, m*labels_test+b)
+    return plot_fig
+    

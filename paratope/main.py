@@ -131,7 +131,9 @@ def process_cv_results():
     #_,_,aglabels, agprobs = open_crossval_results("ag-cv-ab-seq", NUM_ITERATIONS)
 
 
-    fig1 = plot_pr_curve(labels1, probs1, colours=("#0072CF", "#68ACE5"),label="Parapred")
+    # fig1 = plot_pr_curve(labels1, probs1, colours=("#0072CF", "#68ACE5"),label="Parapred")
+    fig1 = plot_r2(labels1, probs1)
+    fig1.savefig('r2_plot.png', bbox_inches='tight')
 
     #fig1 = plot_abip_pr(fig1)
     #fig1 = plot_pr_curve(selflabels1, selfprobs1, colours=("#228B18", "#006400"), label="Fast-Parapred", plot_fig=fig1)
@@ -143,8 +145,8 @@ def process_cv_results():
         print_probabilities()
 
     # Computing overall classifier metrics
-    print("Computing classifier metrics")
-    initial_compute_classifier_metrics(labels, probs, threshold=0.4913739)
+    # print("Computing classifier metrics")
+    # initial_compute_classifier_metrics(labels, probs, threshold=0.4913739)
 
 run_cv()
 #process_cv_results()

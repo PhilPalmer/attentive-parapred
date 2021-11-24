@@ -10,7 +10,7 @@ import torch.optim as optim
 from torch.optim import lr_scheduler
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from torch import index_select
-from sklearn.metrics import confusion_matrix, roc_auc_score, matthews_corrcoef
+from sklearn.metrics import confusion_matrix, roc_auc_score, matthews_corrcoef, r2_score
 import time
 
 from constants import *
@@ -141,8 +141,10 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
             delta_gs = torch.FloatTensor(delta_gs)
             mse_loss = nn.MSELoss()
             loss = mse_loss(output, delta_gs)
+            r2 = r2_score(delta_gs.detach().numpy().tolist(), output.detach().numpy().tolist())
 
-            print("Epoch %d - Batch %d has loss %d " % (epoch, j, loss.data)) # , file=monitoring_file
+            # print("Epoch %d - Batch %d has loss %d and R2 %d" % (epoch, j, loss.data, r2)) # , file=monitoring_file
+            print(f"Epoch {epoch} - Batch {j} has loss {loss.data} and R2 {r2}")
             epoch_loss +=loss
             model.zero_grad()
 
@@ -166,17 +168,11 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
 
         probs_test2, _= model(cdrs_test2, masks_test2, ag_test2, ag_masks_test2, dist_test2)
 
-
-        sigmoid = nn.Sigmoid()
-        probs_test2 = sigmoid(probs_test2)
-
         probs_test2 = probs_test2.data.cpu().numpy().astype('float32')
-        lbls_test2 = lbls_test2.data.cpu().numpy().astype('int32')
+        delta_gs_test2 = torch.FloatTensor(delta_gs_test).data.cpu().numpy().astype('int32')
 
-        # probs_test2 = flatten_with_lengths(probs_test2, lengths_test2)
-        # lbls_test2 = flatten_with_lengths(lbls_test2, lengths_test2)
-
-        # print("Roc", roc_auc_score(lbls_test2, probs_test2))
+        loss = mse_loss(output, delta_gs)
+        r2 = r2_score(delta_gs.detach().numpy().tolist(), output.detach().numpy().tolist())
 
     print("Saving")
 
@@ -195,18 +191,9 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
 
     probs_test, _ = model(cdrs_test, masks_test, ag_test, ag_masks_test, dist_test)
 
-
-    sigmoid = nn.Sigmoid()
-    probs_test = sigmoid(probs_test)
-
     #print("probs", probs_test, file=track_f)
 
     probs_test1 = probs_test.data.cpu().numpy().astype('float32')
-    lbls_test1 = lbls_test.data.cpu().numpy().astype('int32')
+    delta_gs_test1 = torch.FloatTensor(delta_gs_test).data.cpu().numpy().astype('int32')
 
-    # probs_test1 = flatten_with_lengths(probs_test1, list(lengths_test))
-    # lbls_test1 = flatten_with_lengths(lbls_test1, list(lengths_test))
-
-    # print("Roc", roc_auc_score(lbls_test1, probs_test1))
-
-    return probs_test, lbls_test, probs_test1, lbls_test1  # get them in kfold, append, concatenate do roc on them
+    return probs_test1, delta_gs_test1  # get them in kfold, append, concatenate do roc on them

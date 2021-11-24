@@ -13,7 +13,6 @@ from torch import index_select
 from sklearn.metrics import confusion_matrix, roc_auc_score, matthews_corrcoef
 import pickle
 import io
-import torch
 
 from atrous_run import *
 from attentionRNN_run import *
@@ -126,7 +125,7 @@ def kfold_cv_eval(dataset, output_file="crossval-data.p",
                                     cdrs_test, lbls_test, mask_test, lengths_test)
 
         if code == 7:
-            probs_test1, lbls_test1, probs_test2, lbls_test2 = \
+            probs_test, lbls_test = \
                 xself_run(cdrs_train, lbls_train, mask_train, lengths_train,
                             ag_train, ag_masks_train, ag_lengths_train, dist_mat_train, delta_gs_train, weights_template, i,
                             cdrs_test, lbls_test, mask_test, lengths_test,
@@ -156,8 +155,8 @@ def kfold_cv_eval(dataset, output_file="crossval-data.p",
     # #print("end", all_probs)
     # mask_mat = torch.cat(all_masks)
 
-    # with open(output_file, "wb") as f:
-    #     pickle.dump((lbl_mat1, prob_mat1, mask_mat, all_lbls2, all_probs2), f)
+    with open(output_file, "wb") as f:
+        pickle.dump((probs_test, lbls_test), f)
 
 def helper_compute_metrics(matrices, aucs, mcorrs):
     matrices = np.stack(matrices)
@@ -293,40 +292,13 @@ def open_crossval_results(folder="cv-ab-seq", num_results=NUM_ITERATIONS,
         result_filename = "{}/run-{}.p".format(folder, r)
         with open(result_filename, "rb") as f:
             # lbl_mat, prob_mat, mask_mat, all_lbls, all_probs = pickle.load(f)
-            lbl_mat, prob_mat, mask_mat, all_lbls, all_probs = CPU_Unpickler(f).load()
-
-            lbl_mat = lbl_mat.data.cpu().numpy()
-            prob_mat = prob_mat.data.cpu().numpy()
-            mask_mat = mask_mat.data.cpu().numpy()
-
-        # Get entries corresponding to the given loop
-        if loop_filter is not None:
-            lbl_mat = lbl_mat[loop_filter::6]
-            prob_mat = prob_mat[loop_filter::6]
-            mask_mat = mask_mat[loop_filter::6]
-
-        """""
-        if not flatten_by_lengths:
-            class_probabilities.append(prob_mat)
-            labels.append(lbl_mat)
-            continue
-        """
-
-        # Discard sequence padding
-        seq_lens = np.sum(np.squeeze(mask_mat), axis=1)
-        seq_lens = seq_lens.astype(int)
-
-        p = flatten_with_lengths(prob_mat, seq_lens)
-        l = flatten_with_lengths(lbl_mat, seq_lens)
-
-        class_probabilities.append(p)
-        labels.append(l)
+            all_lbls, all_probs = CPU_Unpickler(f).load()
 
         #class_probabilities1 = np.concatenate((class_probabilities1, all_probs))
         #labels1 = np.concatenate((labels1,all_lbls))
 
-        class_probabilities1.append(all_probs)
-        labels1.append(all_lbls)
+        class_probabilities1.extend(all_probs)
+        labels1.extend(all_lbls)
 
     return labels, class_probabilities, labels1, class_probabilities1
 
