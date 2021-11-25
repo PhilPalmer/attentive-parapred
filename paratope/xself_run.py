@@ -77,7 +77,8 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
     total_ag_input = ag_train
     total_ag_masks = ag_masks_train
     total_ag_lengths = ag_lengths_train
-    total_delta_gs = delta_gs_train
+    total_delta_gs = torch.tensor(delta_gs_train)
+    delta_gs_test = torch.tensor(delta_gs_test)
 
     if use_cuda:
         print("using cuda")
@@ -96,8 +97,8 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
 
         total_dist_train = total_dist_train.cuda()
         dist_test = dist_test.cuda()
-        # total_delta_gs = total_delta_gs.cuda()
-        # delta_gs_test = delta_gs_test.cuda()
+        total_delta_gs = total_delta_gs.cuda()
+        delta_gs_test = delta_gs_test.cuda()
 
     times = []
 
