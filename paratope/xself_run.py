@@ -132,7 +132,7 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
             ag_masks = index_select(total_ag_masks, 0, interval)
 
             dist = index_select(total_dist_train, 0, interval)
-            delta_gs = total_delta_gs[interval]
+            delta_gs = index_select(total_delta_gs, 0, interval)
 
             input, masks, lengths, lbls, ag, ag_masks, dist, delta_gs = \
                 sort_ag_batch(input, masks, list(lengths), lbls, ag_input, ag_masks, dist, delta_gs)
