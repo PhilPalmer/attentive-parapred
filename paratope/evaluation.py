@@ -97,7 +97,7 @@ def kfold_cv_eval(dataset, output_file="crossval-data.p",
                               cdrs_test, lbls_test, mask_test, lengths_test)
 
         if code == 3:
-            probs_test1, lbls_test1, probs_test2, lbls_test2 = \
+            probs_test, lbls_test = \
                 atrous_run(cdrs_train, lbls_train, mask_train, lengths_train, delta_gs_train, weights_template, i,
                                      cdrs_test, lbls_test, mask_test, lengths_test, delta_gs_test)
 
@@ -149,8 +149,8 @@ def kfold_cv_eval(dataset, output_file="crossval-data.p",
     # #print("end", all_probs)
     # mask_mat = torch.cat(all_masks)
 
-    # with open(output_file, "wb") as f:
-    #     pickle.dump((lbl_mat1, prob_mat1, mask_mat, all_lbls2, all_probs2), f)
+    with open(output_file, "wb") as f:
+        pickle.dump((probs_test, lbls_test), f)
 
 def helper_compute_metrics(matrices, aucs, mcorrs):
     matrices = np.stack(matrices)

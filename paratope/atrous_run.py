@@ -34,7 +34,8 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, delta_gs_trai
     total_lbls = lbls_train
     total_masks = masks_train
     total_lengths = lengths_train
-    total_delta_gs = delta_gs_train
+    total_delta_gs = torch.FloatTensor(delta_gs_train)
+    delta_gs_test = torch.FloatTensor(delta_gs_test)
 
     if use_cuda:
         print("using cuda")
@@ -42,11 +43,11 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, delta_gs_trai
         total_input = total_input.cuda()
         total_lbls = total_lbls.cuda()
         total_masks = total_masks.cuda()
-        # total_delta_gs = total_delta_gs.cuda()
+        total_delta_gs = total_delta_gs.cuda()
         cdrs_test = cdrs_test.cuda()
         lbls_test = lbls_test.cuda()
         masks_test = masks_test.cuda()
-        # delta_gs_test = delta_gs_test.cuda()
+        delta_gs_test = delta_gs_test.cuda()
 
     for epoch in range(epochs):
         model.train(True)
@@ -69,7 +70,7 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, delta_gs_trai
             masks = index_select(total_masks, 0, interval)
             lengths = total_lengths[j:j + batch_size]
             lbls = index_select(total_lbls, 0, interval)
-            delta_gs = total_delta_gs[interval]
+            delta_gs = index_select(total_delta_gs, 0, interval)
 
             input, masks, lengths, lbls, delta_gs = sort_batch(input, masks, list(lengths), lbls, delta_gs)
 
@@ -85,8 +86,6 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, delta_gs_trai
 
 
             output = model(input, unpacked_masks)
-
-            delta_gs = torch.FloatTensor(delta_gs)
             mse_loss = nn.MSELoss()
             loss = mse_loss(output, delta_gs)
 
@@ -102,7 +101,7 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, delta_gs_trai
         model.eval()
 
         cdrs_test2, masks_test2, lengths_test2, lbls_test2, delta_gs_test2 = sort_batch(cdrs_test, masks_test, list(lengths_test),
-                                                                    lbls_test, np.asarray(delta_gs_test))
+                                                                    lbls_test, delta_gs_test)
 
         unpacked_masks_test2 = masks_test2
 
@@ -121,7 +120,7 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, delta_gs_trai
     print("test", file=track_f)
     model.eval()
 
-    cdrs_test, masks_test, lengths_test, lbls_test, delta_gs_test = sort_batch(cdrs_test, masks_test, list(lengths_test), lbls_test, np.asarray(delta_gs_test))
+    cdrs_test, masks_test, lengths_test, lbls_test, delta_gs_test = sort_batch(cdrs_test, masks_test, list(lengths_test), lbls_test, delta_gs_test)
 
     unpacked_masks_test = masks_test
     packed_input = pack_padded_sequence(masks_test, list(lengths_test), batch_first=True)
@@ -132,11 +131,10 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, delta_gs_trai
     # K.mean(K.equal(lbls_test, K.round(y_pred)), axis=-1)
 
     probs_test1 = probs_test.data.cpu().numpy().astype('float32')
-    lbls_test1 = lbls_test.data.cpu().numpy().astype('int32')
+    delta_gs_test1 = delta_gs_test.data.cpu().numpy().astype('float32')
 
-    print(f"probs_test1: {probs_test1}")
-    print(f"delta_gs_test: {delta_gs_test}")
-    print("R2", r2_score(delta_gs_test, probs_test1))
-    print("MSE", mean_squared_error(delta_gs_test, probs_test1))
+    r2 = r2_score(delta_gs_test1, probs_test1)
+    mse = mean_squared_error(delta_gs_test1, probs_test1)
+    print(f"Test: Epoch {epoch} - Batch {j} has loss {mse} and R2 {r2}")
 
-    return probs_test, lbls_test, probs_test1, lbls_test1  # get them in kfold, append, concatenate do roc on them
+    return probs_test1, delta_gs_test1  # get them in kfold, append, concatenate do roc on them
