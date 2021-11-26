@@ -49,7 +49,7 @@ def sort_ag_batch(cdrs, masks, lengths, lbls, ag, ag_masks, dist, delta_gs):
     ag_masks = torch.index_select(ag_masks, 0, index)
 
     dist= torch.index_select(dist, 0, index)
-    delta_gs = np.asarray(delta_gs)[index]
+    delta_gs = torch.index_select(delta_gs, 0, index)
 
     return cdrs, masks, lengths, lbls, ag, ag_masks, dist, delta_gs
 
@@ -130,7 +130,7 @@ def permute_training_ag_data(cdrs, masks, lengths, lbls, ag, ag_masks, ag_length
     ag_lengths = [ag_lengths[i] for i in index]
 
     dist= torch.index_select(dist, 0, index)
-    delta_gs = torch.tensor([delta_gs[i] for i in index])
+    delta_gs = torch.index_select(delta_gs, 0, index)
 
     return cdrs, masks, lengths, lbls, ag, ag_masks, ag_lengths, dist, delta_gs
 

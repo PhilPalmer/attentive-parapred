@@ -139,7 +139,6 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
 
             output, _ = model(input, masks, ag_input, ag_masks, dist)
 
-            delta_gs = torch.FloatTensor(delta_gs)
             mse_loss = nn.MSELoss()
             loss = mse_loss(output, delta_gs)
             r2 = r2_score(delta_gs.detach().numpy().tolist(), output.detach().numpy().tolist())
