@@ -144,7 +144,7 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
             r2 = r2_score(delta_gs.data.cpu().numpy().tolist(), output.data.cpu().numpy().tolist())
 
             # print("Epoch %d - Batch %d has loss %d and R2 %d" % (epoch, j, loss.data, r2)) # , file=monitoring_file
-            print(f"Epoch {epoch} - Batch {j} has loss {loss.data} and R2 {r2}")
+            print(f"      Epoch {epoch} - Batch {j} has loss {loss.data} and R2 {r2}")
             epoch_loss +=loss
             model.zero_grad()
 
@@ -162,17 +162,16 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
 
         model.eval()
 
-        cdrs_test2, masks_test2, lengths_test2, lbls_test2, ag_test2, ag_masks_test2, dist_test2, delta_gs_test2 = \
-            sort_ag_batch(cdrs_test, masks_test, list(lengths_test), lbls_test, ag_test, ag_masks_test, dist_test, delta_gs_test)
+        # cdrs_test2, masks_test2, lengths_test2, lbls_test2, ag_test2, ag_masks_test2, dist_test2, delta_gs_test2 = \
+        #     sort_ag_batch(cdrs_test, masks_test, list(lengths_test), lbls_test, ag_test, ag_masks_test, dist_test, delta_gs_test)
 
 
-        probs_test2, _= model(cdrs_test2, masks_test2, ag_test2, ag_masks_test2, dist_test2)
-
-        probs_test2 = probs_test2.data.cpu().numpy().astype('float32')
-        delta_gs_test2 = torch.FloatTensor(delta_gs_test).data.cpu().numpy().astype('float32')
-
-        loss = mse_loss(output, delta_gs)
-        r2 = r2_score(delta_gs.detach().numpy().astype('float32').tolist(), output.detach().numpy().astype('float32').tolist())
+        # probs_test2, _= model(cdrs_test2, masks_test2, ag_test2, ag_masks_test2, dist_test2)
+        # loss = mse_loss(probs_test2, delta_gs_test2)
+        # probs_test2 = probs_test2.data.cpu().numpy().astype('float32')
+        # delta_gs_test2 = delta_gs_test.data.cpu().numpy().astype('float32')
+        # r2 = r2_score(delta_gs_test2, probs_test2)
+        # print(f"Test: Epoch {epoch} - Batch {j} has loss {loss.data} and R2 {r2}")
 
     print("Saving")
 
