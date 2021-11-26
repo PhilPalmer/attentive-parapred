@@ -141,7 +141,7 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
 
             mse_loss = nn.MSELoss()
             loss = mse_loss(output, delta_gs)
-            r2 = r2_score(delta_gs.detach().numpy().tolist(), output.detach().numpy().tolist())
+            r2 = r2_score(delta_gs.data.cpu().numpy().tolist(), output.data.cpu().numpy().tolist())
 
             # print("Epoch %d - Batch %d has loss %d and R2 %d" % (epoch, j, loss.data, r2)) # , file=monitoring_file
             print(f"Epoch {epoch} - Batch {j} has loss {loss.data} and R2 {r2}")
@@ -169,10 +169,10 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
         probs_test2, _= model(cdrs_test2, masks_test2, ag_test2, ag_masks_test2, dist_test2)
 
         probs_test2 = probs_test2.data.cpu().numpy().astype('float32')
-        delta_gs_test2 = torch.FloatTensor(delta_gs_test).data.cpu().numpy().astype('int32')
+        delta_gs_test2 = torch.FloatTensor(delta_gs_test).data.cpu().numpy().astype('float32')
 
         loss = mse_loss(output, delta_gs)
-        r2 = r2_score(delta_gs.detach().numpy().tolist(), output.detach().numpy().tolist())
+        r2 = r2_score(delta_gs.detach().numpy().astype('float32').tolist(), output.detach().numpy().astype('float32').tolist())
 
     print("Saving")
 
@@ -194,6 +194,6 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
     #print("probs", probs_test, file=track_f)
 
     probs_test1 = probs_test.data.cpu().numpy().astype('float32')
-    delta_gs_test1 = torch.FloatTensor(delta_gs_test).data.cpu().numpy().astype('int32')
+    delta_gs_test1 = torch.FloatTensor(delta_gs_test).data.cpu().numpy().astype('float32')
 
     return probs_test1, delta_gs_test1  # get them in kfold, append, concatenate do roc on them
