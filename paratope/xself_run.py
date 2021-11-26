@@ -193,6 +193,6 @@ def xself_run(cdrs_train, lbls_train, masks_train, lengths_train,
     #print("probs", probs_test, file=track_f)
 
     probs_test1 = probs_test.data.cpu().numpy().astype('float32')
-    delta_gs_test1 = torch.FloatTensor(delta_gs_test).data.cpu().numpy().astype('float32')
+    delta_gs_test1 = delta_gs_test.data.cpu().numpy().astype('float32')
 
     return probs_test1, delta_gs_test1  # get them in kfold, append, concatenate do roc on them
