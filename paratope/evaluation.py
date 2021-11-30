@@ -36,6 +36,18 @@ def kfold_cv_eval(dataset, output_file="crossval-data.p",
         dataset["ag"], dataset["ag_masks"], dataset["ag_lengths"], dataset["dist_mat"], dataset["delta_gs"]
 
 
+    # Group inputs by Abs
+    cdrs = cdrs.reshape(-1, 6, 32, 34)
+    lbls = lbls.reshape(-1, 6, 32, 1)
+    masks = masks.reshape(-1, 6, 32, 1)
+    lengths = torch.tensor(lengths).reshape(-1, 6)
+    ag = ag.reshape(-1, 6, 1269, 28)
+    ag_masks = ag_masks.reshape(-1, 6, 1269, 1)
+    ag_lengths = torch.tensor(ag_lengths).reshape(-1, 6)
+    dist_mat = dist_mat.reshape(-1, 6, 32, 1269)
+    delta_gs = torch.FloatTensor(delta_gs).reshape(-1, 6)
+    delta_gs = torch.index_select(delta_gs, 1, torch.tensor([0])).flatten()
+    
     print("cdrs", cdrs.shape)
     print("ag", ag.shape)
     #print("lbls", lbls, file=data_file)
@@ -55,22 +67,21 @@ def kfold_cv_eval(dataset, output_file="crossval-data.p",
         print("Fold: ", i + 1)
         #print(train_idx, )
         #print(test_idx)
-
-        lengths_train = [lengths[i] for i in train_idx]
-        lengths_test = [lengths[i] for i in test_idx]
-
-        delta_gs_train = [delta_gs[i] for i in train_idx]
-        delta_gs_test = [delta_gs[i] for i in test_idx]
-
-        ag_lengths_train = [ag_lengths[i] for i in train_idx]
-        ag_lengths_test = [ag_lengths[i] for i in test_idx]
-
         #print("train_idx", train_idx)
 
         print("len(train_idx",len(train_idx))
 
         train_idx = torch.from_numpy(train_idx)
         test_idx = torch.from_numpy(test_idx)
+
+        lengths_train = torch.index_select(lengths, 0, train_idx)
+        lengths_test = torch.index_select(lengths, 0, test_idx)
+
+        delta_gs_train = torch.index_select(delta_gs, 0, train_idx)
+        delta_gs_test = torch.index_select(delta_gs, 0, test_idx)
+
+        ag_lengths_train = torch.index_select(ag_lengths, 0, train_idx)
+        ag_lengths_test = torch.index_select(ag_lengths, 0, test_idx)
 
         cdrs_train = index_select(cdrs, 0, train_idx)
         lbls_train = index_select(lbls, 0, train_idx)

@@ -38,8 +38,9 @@ class DilatedConv(nn.Module):
         """
 
     def forward(self, input, unpacked_masks):
-        x=input
 
+        x=input.reshape(-1, 32, 34)
+        unpacked_masks = unpacked_masks.reshape(-1, 32, 1)
         unpacked_masks = torch.transpose(unpacked_masks, 1, 2)
 
         x = torch.transpose(x, 1, 2)

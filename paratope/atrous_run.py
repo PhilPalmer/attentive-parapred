@@ -34,8 +34,7 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, delta_gs_trai
     total_lbls = lbls_train
     total_masks = masks_train
     total_lengths = lengths_train
-    total_delta_gs = torch.FloatTensor(delta_gs_train)
-    delta_gs_test = torch.FloatTensor(delta_gs_test)
+    total_delta_gs = delta_gs_train
 
     if use_cuda:
         print("using cuda")
@@ -72,20 +71,21 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, delta_gs_trai
             lbls = index_select(total_lbls, 0, interval)
             delta_gs = index_select(total_delta_gs, 0, interval)
 
-            input, masks, lengths, lbls, delta_gs = sort_batch(input, masks, list(lengths), lbls, delta_gs)
+            # input, masks, lengths, lbls, delta_gs = sort_batch(input, masks, list(lengths), lbls, delta_gs)
 
-            unpacked_masks = masks
+            # unpacked_masks = masks.reshape(-1, 32, 1)
+            # lengths = lengths.flatten()
+            # packed_masks = pack_padded_sequence(unpacked_masks, lengths, batch_first=True, enforce_sorted=False)
+            # masks, _ = pad_packed_sequence(packed_masks, batch_first=True)
 
-            packed_masks = pack_padded_sequence(masks, lengths, batch_first=True)
-            masks, _ = pad_packed_sequence(packed_masks, batch_first=True)
+            # unpacked_lbls = lbls.reshape(-1, 32, 1)
 
-            unpacked_lbls = lbls
-
-            packed_lbls = pack_padded_sequence(lbls, lengths, batch_first=True)
-            lbls, _ = pad_packed_sequence(packed_lbls, batch_first=True)
+            # packed_lbls = pack_padded_sequence(unpacked_lbls, lengths, batch_first=True, enforce_sorted=False)
+            # lbls, _ = pad_packed_sequence(packed_lbls, batch_first=True)
 
 
-            output = model(input, unpacked_masks)
+            output = model(input, masks).reshape(-1, 6)
+            output = torch.sum(output, dim=1)
             mse_loss = nn.MSELoss()
             loss = mse_loss(output, delta_gs)
 
@@ -100,33 +100,36 @@ def atrous_run(cdrs_train, lbls_train, masks_train, lengths_train, delta_gs_trai
 
         model.eval()
 
-        cdrs_test2, masks_test2, lengths_test2, lbls_test2, delta_gs_test2 = sort_batch(cdrs_test, masks_test, list(lengths_test),
-                                                                    lbls_test, delta_gs_test)
+        # cdrs_test2, masks_test2, lengths_test2, lbls_test2, delta_gs_test2 = sort_batch(cdrs_test, masks_test, list(lengths_test),
+                                                                    # lbls_test, delta_gs_test)
 
-        unpacked_masks_test2 = masks_test2
+        # unpacked_masks_test2 = masks_test
 
-        probs_test2 = model(cdrs_test2, unpacked_masks_test2)
+        # probs_test2 = model(cdrs_test, unpacked_masks_test2)
 
         # K.mean(K.equal(lbls_test, K.round(y_pred)), axis=-1)
 
-        sigmoid = nn.Sigmoid()
-        probs_test2 = sigmoid(probs_test2)
+        # sigmoid = nn.Sigmoid()
+        # probs_test2 = sigmoid(probs_test2)
 
-        probs_test2 = probs_test2.data.cpu().numpy().astype('float32')
-        lbls_test2 = lbls_test2.data.cpu().numpy().astype('int32')
+        # probs_test2 = probs_test2.data.cpu().numpy().astype('float32')
+        # lbls_test = lbls_test.data.cpu().numpy().astype('int32')
 
     torch.save(model.state_dict(), weights_template.format(weights_template_number))
 
     print("test", file=track_f)
     model.eval()
 
-    cdrs_test, masks_test, lengths_test, lbls_test, delta_gs_test = sort_batch(cdrs_test, masks_test, list(lengths_test), lbls_test, delta_gs_test)
+    # cdrs_test, masks_test, lengths_test, lbls_test, delta_gs_test = sort_batch(cdrs_test, masks_test, list(lengths_test), lbls_test, delta_gs_test)
 
-    unpacked_masks_test = masks_test
-    packed_input = pack_padded_sequence(masks_test, list(lengths_test), batch_first=True)
+
+    unpacked_masks_test = masks_test.reshape(-1, 32, 1)
+    lengths_test = lengths_test.flatten()
+    packed_input = pack_padded_sequence(unpacked_masks_test, lengths_test, batch_first=True, enforce_sorted=False)
     masks_test, _ = pad_packed_sequence(packed_input, batch_first=True)
 
-    probs_test = model(cdrs_test, unpacked_masks_test)
+    probs_test = model(cdrs_test, unpacked_masks_test).reshape(-1, 6)
+    probs_test = torch.sum(probs_test, dim=1)
 
     # K.mean(K.equal(lbls_test, K.round(y_pred)), axis=-1)
 

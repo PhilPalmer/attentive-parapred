@@ -150,7 +150,7 @@ def permute_training_data(cdrs, masks, lengths, delta_gs, lbls):
     cdrs = torch.index_select(cdrs, 0, index)
     lbls = torch.index_select(lbls, 0, index)
     masks = torch.index_select(masks, 0, index)
-    lengths = [lengths[i] for i in index]
+    lengths = torch.index_select(lengths, 0, index)
     delta_gs = torch.index_select(delta_gs, 0, index)
 
     return cdrs, masks, lengths, delta_gs, lbls
